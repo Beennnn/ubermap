@@ -4,7 +4,6 @@ from ableton.v2.control_surface.capabilities import controller_id, inport, outpo
 from .firmware_handling import get_provided_firmware_version
 from .push import Push
 
-from Ubermap import UbermapDevicesPatches
 
 def get_capabilities():
     return {CONTROLLER_ID_KEY: controller_id(vendor_id=2536, product_ids=[21], model_name='Ableton Push'),
@@ -22,6 +21,6 @@ def get_capabilities():
 def create_instance(c_instance):
     """ Creates and returns the Push script """
 
-    UbermapDevicesPatches.apply_ubermap_patches()
-
+    from Ubermap import UbermapDevicesPatches
+    UbermapDevicesPatches.apply_ubermap_patches(True)
     return Push(c_instance=c_instance)

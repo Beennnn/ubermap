@@ -1,7 +1,7 @@
 # Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/__init__.py
+
 from __future__ import absolute_import, print_function
 
-from Ubermap import UbermapDevicesPatches
 
 def get_capabilities():
     from ableton.v2.control_surface import capabilities as caps
@@ -22,6 +22,6 @@ def create_instance(c_instance):
     from .push2_model import Root, Sender
     root = Root(sender=Sender(message_sink=c_instance.send_model_update, process_connected=c_instance.process_connected))
 
-    UbermapDevicesPatches.apply_ubermap_patches()
-
+    from Ubermap import UbermapDevicesPatches
+    UbermapDevicesPatches.apply_ubermap_patches(False)
     return Push2(c_instance=c_instance, model=root)

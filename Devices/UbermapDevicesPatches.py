@@ -7,22 +7,18 @@ from Ubermap import UbermapDevices
 from Ubermap.UbermapLibs import log, config
 import inspect
 
-def is_v1():
-    return push_version == '1'
-
-def apply_ubermap_patches():
+def apply_ubermap_patches(is_v1):
     log.info("Applying UbermapDevices patches")
 
     apply_log_method_patches()
     apply_banking_util_patches()
-    apply_device_component_patches()
+    apply_device_component_patches(is_v1)
     apply_device_parameter_bank_patches()
     apply_device_parameter_adapater_patches()
 
 # Create singleton UbermapDevices instance
 ubermap = UbermapDevices.UbermapDevices()
 ubermap_config = config.load('global')
-push_version = ubermap_config.get('Push', 'Version')
 
 def apply_log_method_patches():
     # Log any method calls made to the object - useful for tracing execution flow
@@ -93,19 +89,19 @@ def apply_device_parameter_bank_patches():
 from pushbase.device_component import DeviceComponent
 from pushbase.parameter_provider import ParameterInfo
 
-def apply_device_component_patches():
+def apply_device_component_patches(is_v1):
     # _get_provided_parameters - return Ubermap parameter names if defined, otherwise use the default
     _get_provided_parameters_orig = DeviceComponent._get_provided_parameters
+
+    if is_v1:
+        from Push.parameter_mapping_sensitivities import parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
+    else:
+        from Push2.parameter_mapping_sensitivities import parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
 
     def _get_parameter_info(self, parameter):
         if not parameter:
             return None
-
-        if is_v1():
-            from Push.parameter_mapping_sensitivities import parameter_mapping_sensitivity, fine_grain_parameter_mapping_sensitivity
-            return ParameterInfo(parameter=parameter, name=parameter.custom_name, default_encoder_sensitivity=parameter_mapping_sensitivity(parameter), fine_grain_encoder_sensitivity=fine_grain_parameter_mapping_sensitivity(parameter))
-        else:
-            return ParameterInfo(parameter=parameter, name=parameter.custom_name, default_encoder_sensitivity=self.default_sensitivity(parameter), fine_grain_encoder_sensitivity=self.fine_sensitivity(parameter))
+        return ParameterInfo(parameter=parameter, name=parameter.custom_name, default_encoder_sensitivity=parameter_mapping_sensitivity(parameter), fine_grain_encoder_sensitivity=fine_grain_parameter_mapping_sensitivity(parameter))
 
     def _get_provided_parameters(self):
         ubermap_params = ubermap.get_custom_device_params(self._decorated_device)
